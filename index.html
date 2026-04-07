@@ -110,70 +110,56 @@
     </div>
 
     <script>
-        async function fetchAllNews() {
-            const container = document.getElementById('news-container');
-            const loader = document.getElementById('loader');
-            
-            // 10 מקורות - ללא שינוי לוגי
-            const sources = [
-                { name: 'The Guardian', url: 'https://content.guardianapis.com/search?q=iran%20war%20military&api-key=test' },
-                { name: 'Reuters', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Reuters+Iran+military&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'BBC World', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=BBC+News+Iran+conflict&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'Al Jazeera', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Al+Jazeera+Iran+war&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'Iran International', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.iranintl.com/en/rss/all') },
-                { name: 'NY Times', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=NYTimes+Iran+strike&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'Associated Press', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=AP+News+Iran+tensions&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'CNN', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=CNN+Iran+war+military&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'Defense News', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Defense+News+Iran+missiles&hl=en-US&gl=US&ceid=US:en') },
-                { name: 'Google News Monitor', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Iran+attack+Israel+US&hl=en-US&gl=US&ceid=US:en') }
-            ];
+        async function fetchCyberNews() {
+    const container = document.getElementById('news-container');
+    const loader = document.getElementById('loader');
+    
+    // החלף את הטקסט למטה במפתח שקיבלת מהאתר
+    const API_KEY = 'pub_c87ecc1c01bd4cc2856e1342b69a4512'; 
+    
+    // שאילתה שמחפשת בבת אחת 10+ מקורות על איראן והמלחמה
+    const url = `https://newsdata.io/api/1/news?apikey=${API_KEY}&q=iran%20AND%20(war%20OR%20military%20OR%20strike)&language=en`;
 
-            try {
-                let allArticles = [];
-                const results = await Promise.allSettled(sources.map(s => fetch(s.url).then(r => r.json())));
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-                results.forEach((res, index) => {
-                    if (res.status === 'fulfilled') {
-                        const data = res.value;
-                        const srcName = sources[index].name;
+        if (data.status !== "success") throw new Error("API Limit reached");
 
-                        if (data.response && data.response.results) {
-                            data.response.results.forEach(item => {
-                                allArticles.push({ title: item.webTitle, link: item.webUrl, source: srcName, date: item.webPublicationDate });
-                            });
-                        } 
-                        else if (data.contents) {
-                            const parser = new DOMParser();
-                            const xml = parser.parseFromString(data.contents, "text/xml");
-                            const items = xml.querySelectorAll("item");
-                            items.forEach(item => {
-                                allArticles.push({
-                                    title: item.querySelector("title").textContent,
-                                    link: item.querySelector("link").textContent,
-                                    source: srcName,
-                                    date: item.querySelector("pubDate").textContent
-                                });
-                            });
-                        }
-                    }
-                });
+        loader.style.display = 'none';
+        
+        // הצגת התוצאות מהמקורות השונים (Reuters, AP, CNN וכו')
+        container.innerHTML = data.results.map(art => `
+            <div class="news-card">
+                <span class="source-tag">${art.source_id.toUpperCase()}</span><br>
+                <a href="${art.link}" target="_blank">${art.title}</a>
+                <div class="meta">${new Date(art.pubDate).toLocaleString('he-IL')} // DATA_STREAM_ENCRYPTED</div>
+            </div>
+        `).join('');
 
-                allArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
-                loader.style.display = 'none';
-                container.innerHTML = allArticles.slice(0, 30).map(art => `
-                    <div class="news-card">
-                        <span class="source-tag">${art.source}</span><br>
-                        <a href="${art.link}" target="_blank">${art.title}</a>
-                        <div class="meta">${new Date(art.date).toLocaleString('he-IL')} // SYSTEM_TIME_OK</div>
-                    </div>
-                `).join('');
+    } catch (e) {
+        console.error("SYSTEM ERROR:", e);
+        // אם יש שגיאה, המערכת חוזרת אוטומטית לגרדיאן שעובד לך בטוח
+        fetchGuardianFallback();
+    }
+}
 
-            } catch (e) {
-                loader.innerHTML = "SYSTEM ERROR :: TRY REFRESH";
-            }
-        }
-        fetchAllNews();
-        setInterval(fetchAllNews, 300000);
+// פונקציית גיבוי למקרה שה-API נחסם
+async function fetchGuardianFallback() {
+    const url = 'https://content.guardianapis.com/search?q=iran%20war&api-key=test';
+    const response = await fetch(url);
+    const data = await response.json();
+    document.getElementById('news-container').innerHTML = data.response.results.map(item => `
+        <div class="news-card">
+            <span class="source-tag">THE GUARDIAN (SECURE_LINK)</span><br>
+            <a href="${item.webUrl}" target="_blank">${item.webTitle}</a>
+            <div class="meta">${new Date(item.webPublicationDate).toLocaleString('he-IL')} // FALLBACK_ACTIVE</div>
+        </div>
+    `).join('');
+}
+
+fetchCyberNews();
+setInterval(fetchCyberNews, 600000); // רענון כל 10 דקות
     </script>
 </body>
 </html>
