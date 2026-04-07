@@ -2,54 +2,178 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>מבזקי ביטחון - איראן</title>
+    <title>חמ"ל סייבר - איראן והאזור</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #121212; color: #e0e0e0; text-align: center; padding: 30px; }
-        .container { max-width: 700px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
-        h1 { color: #4dadff; border-bottom: 2px solid #4dadff; display: inline-block; padding-bottom: 5px; }
-        #news-list { text-align: left; direction: ltr; margin-top: 20px; }
-        .article { background: #2a2a2a; margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 5px solid #4dadff; }
-        .article a { color: #fff; text-decoration: none; font-weight: bold; font-size: 18px; }
-        .article p { font-size: 14px; color: #aaa; margin-top: 5px; }
-        .tag { font-size: 11px; background: #4dadff; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        /* הגדרות בסיס - מראה "סייבר" */
+        body { 
+            font-family: 'Courier New', Courier, monospace; /* פונט "קוד" חדיש */
+            background-color: #000; 
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px; /* רשת קווי דטה ברקע */
+            color: #0f0; /* ירוק ניאון */
+            margin: 0; 
+            padding: 20px; 
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.7); /* אפקט זוהר */
+        }
+
+        .container { max-width: 1000px; margin: auto; }
+
+        /* כותרת ראשית עם אפקט תקלה (Glitch) קטן */
+        h1 { 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 4px; 
+            border-bottom: 3px double #0f0; 
+            padding-bottom: 15px; 
+            margin-bottom: 40px; 
+            color: #fff; 
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0; 
+        }
+
+        #news-container { display: flex; flex-direction: column; gap: 10px; }
+
+        /* עיצוב הכתבה כ"שורת פלט צבאי" */
+        .news-card { 
+            background: rgba(0, 20, 0, 0.8); /* ירוק כהה שקוף */
+            border-bottom: 1px solid #0f0; 
+            padding: 15px; 
+            text-align: left; 
+            direction: ltr; 
+            transition: all 0.2s ease-in-out; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* סמן terminal בתחילת השורה */
+        .news-card::before {
+            content: "> ";
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* אפקט מעבר (Hover) */
+        .news-card:hover { 
+            background: rgba(0, 255, 0, 0.1); 
+            transform: scale(1.01); 
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        /* תגית המקור - חדה וטכנולוגית */
+        .source-tag { 
+            display: inline-block; 
+            padding: 2px 10px; 
+            border: 1px solid #0f0; 
+            background: #000;
+            color: #fff; 
+            font-size: 11px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-bottom: 8px; 
+            text-shadow: none;
+        }
+
+        /* קישור הכתבה - לבן וזוהר */
+        .news-card a { 
+            color: #fff; 
+            text-decoration: none; 
+            font-size: 18px; 
+            font-weight: bold; 
+            display: inline; 
+            margin-bottom: 10px; 
+            text-shadow: 0 0 5px #fff;
+        }
+
+        .meta { 
+            font-size: 11px; 
+            color: rgba(0, 255, 0, 0.6); 
+            margin-top: 8px; 
+        }
+
+        /* טוען - אפקט מהבהב */
+        #loader { 
+            text-align: center; 
+            padding: 50px; 
+            font-size: 22px; 
+            animation: blink 1s infinite; 
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>חדשות חוץ: איראן והאזור</h1>
-        <div id="news-list">טוען מבזקים אחרונים...</div>
+        <h1>[[ חמ"ל סייבר: עדכוני איראן ]]</h1>
+        <div id="loader">סורק מקורות גלובליים...</div>
+        <div id="news-container"></div>
     </div>
 
     <script>
-        async function getNews() {
-            const newsList = document.getElementById('news-list');
-            // מפתח API ציבורי של ה-Guardian לבדיקות
-            const apiKey = 'test'; 
-            const url = `https://content.guardianapis.com/search?q=iran%20AND%20(war%20OR%20military%20OR%20strike)&api-key=${apiKey}&order-by=newest`;
+        async function fetchAllNews() {
+            const container = document.getElementById('news-container');
+            const loader = document.getElementById('loader');
+            
+            // 10 מקורות - ללא שינוי לוגי
+            const sources = [
+                { name: 'The Guardian', url: 'https://content.guardianapis.com/search?q=iran%20war%20military&api-key=test' },
+                { name: 'Reuters', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Reuters+Iran+military&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'BBC World', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=BBC+News+Iran+conflict&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'Al Jazeera', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Al+Jazeera+Iran+war&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'Iran International', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.iranintl.com/en/rss/all') },
+                { name: 'NY Times', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=NYTimes+Iran+strike&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'Associated Press', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=AP+News+Iran+tensions&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'CNN', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=CNN+Iran+war+military&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'Defense News', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Defense+News+Iran+missiles&hl=en-US&gl=US&ceid=US:en') },
+                { name: 'Google News Monitor', url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=Iran+attack+Israel+US&hl=en-US&gl=US&ceid=US:en') }
+            ];
 
             try {
-                const response = await fetch(url);
-                const data = await response.json();
-                const articles = data.response.results;
+                let allArticles = [];
+                const results = await Promise.allSettled(sources.map(s => fetch(s.url).then(r => r.json())));
 
-                let html = "";
-                articles.slice(0, 6).forEach(art => {
-                    html += `
-                        <div class="article">
-                            <span class="tag">${art.sectionName}</span><br>
-                            <a href="${art.webUrl}" target="_blank">${art.webTitle}</a>
-                            <p>פורסם בתאריך: ${new Date(art.webPublicationDate).toLocaleDateString('he-IL')}</p>
-                        </div>`;
+                results.forEach((res, index) => {
+                    if (res.status === 'fulfilled') {
+                        const data = res.value;
+                        const srcName = sources[index].name;
+
+                        if (data.response && data.response.results) {
+                            data.response.results.forEach(item => {
+                                allArticles.push({ title: item.webTitle, link: item.webUrl, source: srcName, date: item.webPublicationDate });
+                            });
+                        } 
+                        else if (data.contents) {
+                            const parser = new DOMParser();
+                            const xml = parser.parseFromString(data.contents, "text/xml");
+                            const items = xml.querySelectorAll("item");
+                            items.forEach(item => {
+                                allArticles.push({
+                                    title: item.querySelector("title").textContent,
+                                    link: item.querySelector("link").textContent,
+                                    source: srcName,
+                                    date: item.querySelector("pubDate").textContent
+                                });
+                            });
+                        }
+                    }
                 });
-                newsList.innerHTML = html || "לא נמצאו כתבות עדכניות.";
-            } catch (err) {
-                newsList.innerHTML = "<p style='text-align:center;'>שגיאה בטעינת החדשות. אנא וודא שיש חיבור לאינטרנט.</p>";
+
+                allArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
+                loader.style.display = 'none';
+                container.innerHTML = allArticles.slice(0, 30).map(art => `
+                    <div class="news-card">
+                        <span class="source-tag">${art.source}</span><br>
+                        <a href="${art.link}" target="_blank">${art.title}</a>
+                        <div class="meta">${new Date(art.date).toLocaleString('he-IL')} // SYSTEM_TIME_OK</div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                loader.innerHTML = "SYSTEM ERROR :: TRY REFRESH";
             }
         }
-
-        getNews();
-        // רענון כל 5 דקות
-        setInterval(getNews, 10000);
+        fetchAllNews();
+        setInterval(fetchAllNews, 300000);
     </script>
 </body>
 </html>
