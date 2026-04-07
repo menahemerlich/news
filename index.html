@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>מבזקי ביטחון - איראן</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #121212; color: #e0e0e0; text-align: center; padding: 30px; }
+        .container { max-width: 700px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        h1 { color: #4dadff; border-bottom: 2px solid #4dadff; display: inline-block; padding-bottom: 5px; }
+        #news-list { text-align: left; direction: ltr; margin-top: 20px; }
+        .article { background: #2a2a2a; margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 5px solid #4dadff; }
+        .article a { color: #fff; text-decoration: none; font-weight: bold; font-size: 18px; }
+        .article p { font-size: 14px; color: #aaa; margin-top: 5px; }
+        .tag { font-size: 11px; background: #4dadff; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>חדשות חוץ: איראן והאזור</h1>
+        <div id="news-list">טוען מבזקים אחרונים...</div>
+    </div>
+
+    <script>
+        async function getNews() {
+            const newsList = document.getElementById('news-list');
+            // מפתח API ציבורי של ה-Guardian לבדיקות
+            const apiKey = 'test'; 
+            const url = `https://content.guardianapis.com/search?q=iran%20AND%20(war%20OR%20military%20OR%20strike)&api-key=${apiKey}&order-by=newest`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const articles = data.response.results;
+
+                let html = "";
+                articles.slice(0, 6).forEach(art => {
+                    html += `
+                        <div class="article">
+                            <span class="tag">${art.sectionName}</span><br>
+                            <a href="${art.webUrl}" target="_blank">${art.webTitle}</a>
+                            <p>פורסם בתאריך: ${new Date(art.webPublicationDate).toLocaleDateString('he-IL')}</p>
+                        </div>`;
+                });
+                newsList.innerHTML = html || "לא נמצאו כתבות עדכניות.";
+            } catch (err) {
+                newsList.innerHTML = "<p style='text-align:center;'>שגיאה בטעינת החדשות. אנא וודא שיש חיבור לאינטרנט.</p>";
+            }
+        }
+
+        getNews();
+        // רענון כל 5 דקות
+        setInterval(getNews, 10000);
+    </script>
+</body>
+</html>
