@@ -20,7 +20,10 @@
             color: var(--neon-green);
             margin: 0; 
             padding: 20px;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
+
+        .container { max-width: 1200px; margin: auto; }
 
         /* לוח בקרה עליון */
         .dashboard {
@@ -35,19 +38,20 @@
             border: 1px solid var(--neon-green);
             padding: 10px 20px;
             text-align: center;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-            min-width: 200px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            min-width: 220px;
         }
 
-        .stat-label { font-size: 10px; text-transform: uppercase; margin-bottom: 5px; opacity: 0.7; }
-        .stat-value { font-size: 18px; font-weight: bold; }
+        .stat-label { font-size: 10px; text-transform: uppercase; margin-bottom: 5px; opacity: 0.8; letter-spacing: 1px; }
+        .stat-value { font-size: 20px; font-weight: bold; color: #fff; }
 
         h1 { 
             text-align: center; 
             letter-spacing: 5px; 
             color: #fff; 
-            text-shadow: 0 0 10px var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
             margin-bottom: 30px;
+            text-transform: uppercase;
         }
 
         /* תצוגת כרטיסיות (Grid) */
@@ -64,14 +68,16 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            min-height: 180px;
         }
 
         .news-card:hover { 
             transform: translateY(-5px);
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.4);
             background: rgba(0, 40, 0, 1);
+            border-color: #fff;
         }
 
         .source-tag { 
@@ -79,9 +85,10 @@
             color: black;
             font-size: 10px;
             font-weight: bold;
-            padding: 2px 8px;
+            padding: 3px 10px;
             align-self: flex-start;
             margin-bottom: 15px;
+            text-shadow: none;
         }
 
         .news-card a { 
@@ -89,34 +96,36 @@
             text-decoration: none; 
             font-size: 16px; 
             font-weight: bold; 
-            line-height: 1.4;
+            line-height: 1.5;
             margin-bottom: 15px;
+            text-shadow: 0 0 2px #fff;
         }
 
         .meta { 
             font-size: 11px; 
-            color: rgba(0, 255, 0, 0.6); 
-            border-top: 1px solid rgba(0, 255, 0, 0.2);
+            color: rgba(0, 255, 0, 0.7); 
+            border-top: 1px solid rgba(0, 255, 0, 0.3);
             padding-top: 10px;
             text-align: left;
             direction: ltr;
         }
 
-        #loader { text-align: center; padding: 100px; font-size: 24px; animation: blink 1s infinite; }
+        #loader { text-align: center; padding: 100px; font-size: 24px; animation: blink 1s infinite; letter-spacing: 3px; }
         @keyframes blink { 50% { opacity: 0; } }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>[[ חמ"ל סייבר: איראן ]]</h1>
+        <h1>[[ חמ"ל סייבר: עדכוני איראן ]]</h1>
 
         <div class="dashboard">
             <div class="stat-box">
-                <div class="stat-label">עדכון אחרון</div>
+                <div class="stat-label">סנכרון אחרון</div>
                 <div id="last-update-val" class="stat-value">--:--:--</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">רענון אוטומטי בעוד</div>
+                <div class="stat-label">סריקה מחדש בעוד</div>
                 <div id="countdown-val" class="stat-value">10:00</div>
             </div>
         </div>
@@ -126,10 +135,10 @@
     </div>
 
     <script>
-        const REFRESH_INTERVAL = 20000; // 10 דקות במילישניות
+        const REFRESH_INTERVAL = 600000; // 10 דקות (במילישניות)
         let timeLeft = REFRESH_INTERVAL / 1000;
 
-        // ניהול ספירה לאחור
+        // ניהול טיימר ספירה לאחור
         function startCountdown() {
             setInterval(() => {
                 timeLeft--;
@@ -148,30 +157,32 @@
             const container = document.getElementById('news-container');
             const loader = document.getElementById('loader');
             
-            // הכנס כאן שוב את ה-API Key שלך
-            const API_KEY = 'כאן_שמים_את_המפתח_שלך'; 
+            // המפתח שלך מהקוד הקודם
+            const API_KEY = 'pub_c87ecc1c01bd4cc2856e1342b69a4512'; 
             const url = `https://newsdata.io/api/1/news?apikey=${API_KEY}&q=iran%20AND%20(war%20OR%20military%20OR%20strike)&language=en`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
-                if (data.status !== "success") throw new Error("API Limit");
+                if (data.status !== "success") throw new Error("API Limit reached");
 
                 loader.style.display = 'none';
+                
+                // עדכון זמן סנכרון ואיפוס טיימר ויזואלי
                 document.getElementById('last-update-val').innerText = new Date().toLocaleTimeString('he-IL');
-                timeLeft = REFRESH_INTERVAL / 1000; // איפוס הטיימר לאחר הצלחה
+                timeLeft = REFRESH_INTERVAL / 1000;
 
                 container.innerHTML = data.results.map(art => `
                     <div class="news-card">
                         <span class="source-tag">${art.source_id.toUpperCase()}</span>
                         <a href="${art.link}" target="_blank">${art.title}</a>
-                        <div class="meta">${new Date(art.pubDate).toLocaleString('he-IL')} // SECURE_DATA</div>
+                        <div class="meta">${new Date(art.pubDate).toLocaleString('he-IL')} // DATA_STREAM_ENCRYPTED</div>
                     </div>
                 `).join('');
 
             } catch (e) {
-                console.error(e);
+                console.error("SYSTEM ERROR:", e);
                 fetchGuardianFallback();
             }
         }
@@ -180,16 +191,20 @@
             const url = 'https://content.guardianapis.com/search?q=iran%20war&api-key=test';
             const response = await fetch(url);
             const data = await response.json();
+            
             document.getElementById('loader').style.display = 'none';
+            document.getElementById('last-update-val').innerText = new Date().toLocaleTimeString('he-IL') + " (BACKUP)";
+            
             document.getElementById('news-container').innerHTML = data.response.results.map(item => `
                 <div class="news-card">
-                    <span class="source-tag">THE GUARDIAN</span>
+                    <span class="source-tag">THE GUARDIAN (SECURE)</span>
                     <a href="${item.webUrl}" target="_blank">${item.webTitle}</a>
-                    <div class="meta">${new Date(item.webPublicationDate).toLocaleString('he-IL')} // FALLBACK</div>
+                    <div class="meta">${new Date(item.webPublicationDate).toLocaleString('he-IL')} // FALLBACK_ACTIVE</div>
                 </div>
             `).join('');
         }
 
+        // הפעלה
         fetchCyberNews();
         startCountdown();
     </script>
